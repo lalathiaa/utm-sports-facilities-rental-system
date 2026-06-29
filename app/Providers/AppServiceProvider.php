@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\AiExplainerInterface;
 use App\Services\GeminiExplainerService;
 use App\Services\TemplateExplainerService;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -32,7 +33,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Railway terminates HTTPS at the load balancer and forwards plain
+        // HTTP to the container. Force all generated URLs to use HTTPS in
+        // production so asset(), url(), and route() never produce http:// links.
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
 
