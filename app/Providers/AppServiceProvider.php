@@ -47,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
         Mail::extend('brevo', function ($app) {
             return new BrevoApiTransport(
                 config('services.brevo.key'),
-                new \Symfony\Component\HttpClient\Psr18Client()
+                \Symfony\Component\HttpClient\HttpClient::create()
             );
         });
     }
