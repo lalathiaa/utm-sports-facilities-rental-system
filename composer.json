@@ -10,6 +10,7 @@
         "ext-pdo_mysql": "*",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
+        "resend/resend-laravel": "^1.4",
         "stripe/stripe-php": "^20.1"
     },
     "require-dev": {
