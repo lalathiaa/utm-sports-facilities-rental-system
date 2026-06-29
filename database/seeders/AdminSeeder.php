@@ -14,12 +14,12 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         User::firstOrCreate(
-            ['email' => 'admin@gmail.com'],
+            ['email' => 'thiathaqif@gmail.com'],
             [
                 'fullname'   => 'System Administrator',
                 'username'   => 'admin',
                 'ic_number'  => '000000000000',
-                'email'      => 'admin@gmail.com',
+                'email'      => 'thiathaqif@gmail.com',
                 'password'   => Hash::make('password'),
                 'role'       => 'admin',
                 'status'     => 'active',
