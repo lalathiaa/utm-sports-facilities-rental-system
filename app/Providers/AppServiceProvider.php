@@ -8,6 +8,9 @@ use App\Services\TemplateExplainerService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
+use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoApiTransport;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -39,6 +42,14 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
+
+        // Register custom Brevo transport for Symfony Mailer
+        Mail::extend('brevo', function ($app) {
+            return new BrevoApiTransport(
+                config('services.brevo.key'),
+                new \Symfony\Component\HttpClient\Psr18Client()
+            );
+        });
     }
 }
 
