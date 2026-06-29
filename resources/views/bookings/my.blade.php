@@ -28,6 +28,7 @@
             'cancel_requested' => ['label' => 'Cancellation Requested','cls' => 'active-amber'],
             'cancelled'        => ['label' => 'Cancelled',             'cls' => 'active-red'],
             'completed'        => ['label' => 'Completed',             'cls' => 'active'],
+            'failed'           => ['label' => 'Failed',                'cls' => 'active-red'],
         ];
     @endphp
     <div class="utm-status-tabs">
@@ -105,7 +106,8 @@
         </div>
     @else
         <div class="utm-card animate-in" style="overflow:hidden;">
-            <table class="utm-table">
+            <div style="overflow-x: auto;">
+                <table class="utm-table">
                 <thead>
                     <tr>
                         <th>Ref #</th>
@@ -205,6 +207,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
             @if($bookings->hasPages())
                 <div style="padding:16px 24px;border-top:1px solid var(--slate-100);">
                     {{ $bookings->links() }}

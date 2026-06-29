@@ -15,33 +15,22 @@
 <div class="utm-auth-shell">
 
     {{-- ══ Left Panel — UTM Brand ══════════════════════════ --}}
-    <div class="utm-auth-panel">
+    <div class="utm-auth-panel" style="background-image: linear-gradient(135deg, rgba(107, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.70) 100%), url('{{ asset('images/utm-scenery.png') }}');">
 
         {{-- Logo --}}
         <div>
-            <div style="display:flex;align-items:center;gap:14px;margin-bottom:60px;">
-                <div style="width:52px;height:52px;background:white;border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.15);">
-                    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
-                        <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-                              font-family="Georgia,serif" font-weight="700" font-size="12" fill="#8B0000">UTM</text>
-                    </svg>
-                </div>
-                <div>
-                    <div style="font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:rgba(201,168,76,.9);">
-                        Sports Facilities
-                    </div>
-                    <div style="font-size:10px;color:rgba(255,255,255,.50);letter-spacing:.04em;margin-top:2px;">
-                        Universiti Teknologi Malaysia
-                    </div>
-                </div>
+            <div style="margin-bottom:40px;">
+                <a href="/" style="display:inline-flex; justify-content:center; align-items:center; transition: all 0.25s ease;" onmouseover="this.style.transform='scale(1.02)';" onmouseout="this.style.transform='scale(1)';">
+                    <img src="{{ asset('images/logo.png?v=4') }}" alt="UTM x Sports" style="width:100%; max-width:280px; height:auto; display:block; filter: drop-shadow(0px 0px 2px #fff) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.6));">
+                </a>
             </div>
 
             {{-- Hero text --}}
             <div style="max-width:340px;">
-                <h1 style="font-family:'Lora',Georgia,serif;font-size:36px;font-weight:600;color:white;line-height:1.25;margin:0 0 20px;">
+                <h1 style="font-family:'Lora',Georgia,serif;font-size:36px;font-weight:600;color:white;line-height:1.25;margin:0 0 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.65);">
                     Book Sports Facilities with Ease
                 </h1>
-                <p style="font-size:15px;color:rgba(255,255,255,.65);line-height:1.7;margin:0;">
+                <p style="font-size:15px;color:rgba(255,255,255,.90);line-height:1.7;margin:0; text-shadow: 0 1px 3px rgba(0,0,0,0.6);">
                     Access world-class sports facilities at UTM. Reserve courts, fields, and equipment in minutes — anytime, anywhere.
                 </p>
             </div>
@@ -54,19 +43,19 @@
                     ['icon'=>'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'text'=>'Digital booking slips & receipts'],
                 ] as $feat)
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <div style="width:32px;height:32px;background:rgba(255,255,255,.10);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(201,168,76,.9)" stroke-width="2">
+                        <div style="width:32px;height:32px;background:rgba(255,255,255,.18);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;backdrop-filter:blur(4px);">
+                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="rgba(201,168,76,1)" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="{{ $feat['icon'] }}"/>
                             </svg>
                         </div>
-                        <span style="font-size:13.5px;color:rgba(255,255,255,.70);">{{ $feat['text'] }}</span>
+                        <span style="font-size:13.5px;color:rgba(255,255,255,.95);text-shadow: 0 1px 3px rgba(0,0,0,0.6);font-weight:500;">{{ $feat['text'] }}</span>
                     </div>
                 @endforeach
             </div>
         </div>
 
         {{-- Bottom --}}
-        <div style="font-size:11.5px;color:rgba(255,255,255,.35);">
+        <div style="font-size:11.5px;color:rgba(255,255,255,.70);text-shadow: 0 1px 3px rgba(0,0,0,0.6);font-weight:500;">
             © {{ date('Y') }} Universiti Teknologi Malaysia
         </div>
     </div>

@@ -156,7 +156,7 @@
                         @foreach($booking->participants as $participant)
                             <div style="display:flex;align-items:start;gap:12px;padding:14px 16px;background:var(--slate-50);border-radius:var(--radius-md);border:1px solid var(--slate-100);">
                                 <div style="width:28px;height:28px;border-radius:50%;background:{{ $participant->is_primary ? 'var(--utm-maroon)' : 'var(--slate-300)' }};color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">{{ $loop->iteration }}</div>
-                                <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                                <div style="flex:1;display:grid;grid-template-columns:{{ $participant->is_primary ? 'repeat(4,1fr)' : 'repeat(3,1fr)' }};gap:12px;">
                                     <div>
                                         <div style="font-size:10px;color:var(--slate-400);text-transform:uppercase;letter-spacing:.06em;">Full Name</div>
                                         <div style="font-size:13px;font-weight:600;color:var(--slate-800);margin-top:3px;">{{ $participant->fullname }}</div>
@@ -165,6 +165,12 @@
                                         <div style="font-size:10px;color:var(--slate-400);text-transform:uppercase;letter-spacing:.06em;">IC Number</div>
                                         <div style="font-size:13px;font-weight:600;color:var(--slate-800);margin-top:3px;">{{ $participant->ic_number }}</div>
                                     </div>
+                                    @if($participant->is_primary)
+                                        <div>
+                                            <div style="font-size:10px;color:var(--slate-400);text-transform:uppercase;letter-spacing:.06em;">Phone Number</div>
+                                            <div style="font-size:13px;font-weight:600;color:var(--slate-800);margin-top:3px;">{{ $participant->phone_number ?? '—' }}</div>
+                                        </div>
+                                    @endif
                                     <div>
                                         <div style="font-size:10px;color:var(--slate-400);text-transform:uppercase;letter-spacing:.06em;">Matric / Staff ID</div>
                                         <div style="font-size:13px;font-weight:600;color:var(--slate-800);margin-top:3px;">{{ $participant->matric_number ?? '—' }}</div>

@@ -24,6 +24,7 @@ class BookingController extends Controller
 
     public function create(Facility $facility): View
     {
+        Booking::expireStaleBookings();
         abort_if(!$facility->isAvailable(), 403, 'This facility is currently not available for booking.');
 
         $facility->load('equipment');
@@ -56,6 +57,7 @@ class BookingController extends Controller
             // Primary participant (renter)
             'primary_fullname'          => ['required', 'string', 'max:255'],
             'primary_ic_number'         => ['required', 'string', 'max:20'],
+            'primary_phone_number'      => ['required', 'string', 'max:20'],
             'primary_matric_number'     => ['nullable', 'string', 'max:20'],
 
             // Equipment (optional)
@@ -73,8 +75,24 @@ class BookingController extends Controller
 
         $data = $request->validate($rules);
 
+        // Force primary participant details from authenticated user profile for security
+        $data['primary_fullname']     = Auth::user()->fullname;
+        $data['primary_ic_number']    = Auth::user()->ic_number;
+        $data['primary_phone_number'] = Auth::user()->phone_number;
+
         $date          = $data['booking_date'];
         $selectedSlots = $data['slots'];
+
+        // Server-side check: if booking date is today, block passed slots
+        if (date('Y-m-d', strtotime($date)) === date('Y-m-d')) {
+            $currentTime = date('H:i');
+            foreach ($selectedSlots as $slot) {
+                $end = date('H:i', strtotime($slot) + 3600);
+                if ($currentTime >= $end) {
+                    return back()->withErrors(['slots' => "The time slot {$slot} has already passed."])->withInput();
+                }
+            }
+        }
 
         // Validate and collect equipment
         $equipmentItems = collect();
@@ -104,11 +122,21 @@ class BookingController extends Controller
                 ->withInput();
         }
 
-        // Check for already-booked slots
+        // Check for already-booked slots (exclude expired pending_payment reservations)
         $alreadyBooked = Booking::where('facility_id', $facility->id)
             ->where('booking_date', $date)
-            ->whereIn('status', ['confirmed', 'cancel_requested', 'pending_payment'])
             ->whereIn('slot_start', array_map(fn($s) => $s . ':00', $selectedSlots))
+            ->where(function ($query) {
+                $query->whereIn('status', ['confirmed', 'cancel_requested'])
+                      ->orWhere(function ($q) {
+                          // A pending_payment slot only counts if its timer is still running
+                          $q->where('status', 'pending_payment')
+                            ->where(function ($inner) {
+                                $inner->whereNull('payment_expires_at')
+                                      ->orWhere('payment_expires_at', '>', now());
+                            });
+                      });
+            })
             ->exists();
 
         if ($alreadyBooked) {
@@ -162,6 +190,7 @@ class BookingController extends Controller
                     'is_primary'    => true,
                     'fullname'      => $data['primary_fullname'],
                     'ic_number'     => $data['primary_ic_number'],
+                    'phone_number'  => $data['primary_phone_number'],
                     'matric_number' => $data['primary_matric_number'] ?? null,
                 ]);
 
@@ -217,20 +246,40 @@ class BookingController extends Controller
 
     public function myBookings(Request $request): View
     {
+        Booking::expireStaleBookings();
         $search = trim($request->query('search', ''));
         $status = $request->query('status', 'all');
 
         $query = Booking::with(['facility', 'equipment', 'participants', 'feedback', 'payment'])
             ->where('user_id', Auth::id())
-            ->orderByDesc('booking_date')
-            ->orderByDesc('slot_start');
+            ->orderByDesc('created_at');
 
         if ($search !== '') {
             $query->whereHas('facility', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
         if ($status !== 'all' && $status !== '') {
-            $query->where('status', $status);
+            if ($status === 'completed') {
+                $query->where('status', 'confirmed')
+                    ->where(function ($q) {
+                        $q->where('booking_date', '<', now()->toDateString())
+                          ->orWhere(function ($sub) {
+                              $sub->where('booking_date', now()->toDateString())
+                                  ->where('slot_end', '<', now()->toTimeString());
+                          });
+                    });
+            } elseif ($status === 'confirmed') {
+                $query->where('status', 'confirmed')
+                    ->where(function ($q) {
+                        $q->where('booking_date', '>', now()->toDateString())
+                          ->orWhere(function ($sub) {
+                              $sub->where('booking_date', now()->toDateString())
+                                  ->where('slot_end', '>=', now()->toTimeString());
+                          });
+                    });
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         $bookings = $query->paginate(15)->appends($request->query());
@@ -266,16 +315,36 @@ class BookingController extends Controller
 
     public function allBookings(Request $request): View
     {
+        Booking::expireStaleBookings();
         $status = $request->query('status', 'all');
         $search = trim($request->query('search', ''));
         $date   = $request->query('date', '');
 
         $query = Booking::with(['facility', 'user', 'participants'])
-            ->orderByDesc('booking_date')
-            ->orderByDesc('slot_start');
+            ->orderByDesc('created_at');
 
-        if ($status !== 'all') {
-            $query->where('status', $status);
+        if ($status !== 'all' && $status !== '') {
+            if ($status === 'completed') {
+                $query->where('status', 'confirmed')
+                    ->where(function ($q) {
+                        $q->where('booking_date', '<', now()->toDateString())
+                          ->orWhere(function ($sub) {
+                              $sub->where('booking_date', now()->toDateString())
+                                  ->where('slot_end', '<', now()->toTimeString());
+                          });
+                    });
+            } elseif ($status === 'confirmed') {
+                $query->where('status', 'confirmed')
+                    ->where(function ($q) {
+                        $q->where('booking_date', '>', now()->toDateString())
+                          ->orWhere(function ($sub) {
+                              $sub->where('booking_date', now()->toDateString())
+                                  ->where('slot_end', '>=', now()->toTimeString());
+                          });
+                    });
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if ($search !== '') {

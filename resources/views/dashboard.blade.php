@@ -111,12 +111,6 @@
             {{-- Decorative elements --}}
             <div style="position: absolute; right: -20px; top: -20px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,.04);"></div>
             <div style="position: absolute; right: 80px; bottom: -40px; width: 100px; height: 100px; border-radius: 50%; background: rgba(201,168,76,.06);"></div>
-            <div style="position: absolute; right: 10%; top: 50%; transform: translateY(-50%); opacity: 0.15; pointer-events: none;">
-                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
-                    <rect width="40" height="40" rx="8" fill="white"/>
-                    <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="12" fill="#8B0000">UTM</text>
-                </svg>
-            </div>
 
             <div style="position: relative; z-index: 1;">
                 <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
@@ -130,28 +124,6 @@
                         <p style="font-size: 14px; color: rgba(255,255,255,.65); margin: 0;">
                             {{ now()->format('l, d F Y') }}
                         </p>
-                    </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                        @if($user->isRentalOfficer())
-                            <a href="{{ route('facilities.create') }}" class="btn btn-gold btn-sm">
-                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                                </svg>
-                                Add Facility
-                            </a>
-                            <a href="{{ route('bookings.all') }}" class="btn btn-sm"
-                               style="background: rgba(255,255,255,.12); color: white; border: 1px solid rgba(255,255,255,.20);">
-                                View Bookings
-                            </a>
-                        @elseif(!$user->isAdmin())
-                            <a href="{{ route('facilities.index') }}" class="btn btn-gold btn-sm">
-                                Browse Facilities
-                            </a>
-                            <a href="{{ route('bookings.my') }}" class="btn btn-sm"
-                               style="background: rgba(255,255,255,.12); color: white; border: 1px solid rgba(255,255,255,.20);">
-                                My Bookings
-                            </a>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -399,7 +371,114 @@
             {{-- Left Column: Main content panels --}}
             <div style="display:flex;flex-direction:column;gap:24px;">
 
-                {{-- Bookings list (Student/Staff/Guest: Upcoming Bookings) --}}
+                {{-- 1. Admin: Recent User Registrations --}}
+                @if($user->isAdmin())
+                    @php
+                        $recentUsers = \App\Models\User::whereIn('role', ['staff', 'student', 'guest', 'rental_officer'])
+                            ->orderByDesc('created_at')
+                            ->limit(5)
+                            ->get();
+                    @endphp
+                    <div class="utm-card animate-in animate-in-delay-3">
+                        <div class="utm-card-header">
+                            <span class="utm-card-title">👥 Recent User Registrations</span>
+                            <a href="{{ route('admin.users.index') }}" style="font-size:13px;color:var(--utm-maroon);font-weight:600;text-decoration:none;">Manage Users →</a>
+                        </div>
+                        @if($recentUsers->isEmpty())
+                            <div style="padding:40px;text-align:center;color:var(--slate-400);font-size:14px;">
+                                No recent user registrations.
+                            </div>
+                        @else
+                            <div style="overflow-x: auto;">
+                                <table class="utm-table" style="border: none; margin: 0; width: 100%;">
+                                    <thead>
+                                        <tr style="background: var(--slate-50);">
+                                            <th style="padding: 12px 24px; font-size: 11px;">User</th>
+                                            <th style="padding: 12px 24px; font-size: 11px;">Role</th>
+                                            <th style="padding: 12px 24px; font-size: 11px;">Registered At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($recentUsers as $ru)
+                                            <tr style="border-bottom: 1px solid var(--slate-100);">
+                                                <td style="padding: 12px 24px;">
+                                                    <div style="font-weight:600;font-size:13.5px;color:var(--slate-800);">{{ $ru->fullname }}</div>
+                                                    <div style="font-size:11.5px;color:var(--slate-400);">{{ $ru->email }}</div>
+                                                </td>
+                                                <td style="padding: 12px 24px;">
+                                                    @php
+                                                        $badgeClass = match($ru->role) {
+                                                            'rental_officer' => 'badge-admin',
+                                                            'staff'          => 'badge-staff',
+                                                            'student'        => 'badge-student',
+                                                            default          => 'badge-guest',
+                                                        };
+                                                    @endphp
+                                                    <span class="badge {{ $badgeClass }}">{{ $ru->role_label }}</span>
+                                                </td>
+                                                <td style="padding: 12px 24px; font-size:12.5px;color:var(--slate-500);">
+                                                    {{ $ru->created_at ? $ru->created_at->format('d M Y, H:i') : 'N/A' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- 2. Rental Officer: Recent Bookings Activity (above announcements) --}}
+                @if($user->isRentalOfficer())
+                    @php
+                        $recentBookings = \App\Models\Booking::with(['facility', 'user'])
+                            ->orderByDesc('created_at')
+                            ->limit(3)
+                            ->get();
+                    @endphp
+                    <div class="utm-card animate-in animate-in-delay-3">
+                        <div class="utm-card-header">
+                            <span class="utm-card-title">📅 Recent Bookings Activity</span>
+                            <a href="{{ route('bookings.all') }}" style="font-size:13px;color:var(--utm-maroon);font-weight:600;text-decoration:none;">Manage Bookings →</a>
+                        </div>
+                        @if($recentBookings->isEmpty())
+                            <div style="padding:40px;text-align:center;color:var(--slate-400);font-size:14px;">
+                                No bookings registered yet.
+                            </div>
+                        @else
+                            <div>
+                                @foreach($recentBookings as $rb)
+                                    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--slate-100);">
+                                        <div style="flex:1;min-width:0;">
+                                            <div style="font-weight:600;font-size:13.5px;color:var(--slate-800);">{{ $rb->facility->name }}</div>
+                                            <div style="font-size:12px;color:var(--slate-500);margin-top:2px;">
+                                                Renter: <strong style="color: var(--slate-700);">{{ $rb->user->fullname }}</strong> · {{ $rb->booking_date->format('d M Y') }} ({{ $rb->slotLabel() }})
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+                                            @php
+                                                $badgeClass = match($rb->status) {
+                                                    'confirmed' => 'badge-confirmed',
+                                                    'cancelled' => 'badge-cancelled',
+                                                    'cancel_requested' => 'badge-requested',
+                                                    'pending_payment' => 'badge-pending',
+                                                    default => '',
+                                                };
+                                            @endphp
+                                            @if($rb->status === 'failed')
+                                                <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:600;background:rgba(220,38,38,.08);color:var(--danger);">Failed</span>
+                                            @else
+                                                <span class="badge {{ $badgeClass }}">{{ ucfirst(str_replace('_', ' ', $rb->status)) }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- 3. Student/Staff/Guest: Upcoming Bookings --}}
                 @if(!$user->isAdmin() && !$user->isRentalOfficer())
                     @php
                         $upcomingBookings = \App\Models\Booking::where('user_id', $user->id)
@@ -441,11 +520,11 @@
                     </div>
                 @endif
 
-                {{-- Announcements list --}}
+                {{-- 4. Announcements --}}
                 @if($user->isRentalOfficer())
                     @php
                         $latestAnnouncements = \App\Models\Announcement::where('user_id', $user->id)
-                            ->orderByDesc('announcement_time')->limit(3)->get();
+                            ->orderByDesc('created_at')->limit(3)->get();
                     @endphp
                     <div class="utm-card animate-in animate-in-delay-4">
                         <div class="utm-card-header">
@@ -480,7 +559,7 @@
                 @elseif(!$user->isAdmin())
                     @php
                         $latestAnnouncements = \App\Models\Announcement::with('user')
-                            ->orderByDesc('announcement_time')->limit(3)->get();
+                            ->orderByDesc('created_at')->limit(3)->get();
                     @endphp
                     @if($latestAnnouncements->isNotEmpty())
                         <div class="utm-card animate-in animate-in-delay-4">
@@ -506,6 +585,93 @@
                             </div>
                         </div>
                     @endif
+                @endif
+
+                {{-- 5. Rental Officer: Latest Feedback --}}
+                @if($user->isRentalOfficer())
+                    @php
+                        $latestFeedbacks = \App\Models\Feedback::with(['user', 'facility'])
+                            ->orderByDesc('created_at')
+                            ->limit(3)
+                            ->get();
+                    @endphp
+                    <div class="utm-card animate-in animate-in-delay-5">
+                        <div class="utm-card-header">
+                            <span class="utm-card-title">💬 Latest Customer Feedbacks</span>
+                            <a href="{{ route('feedback.all') }}" style="font-size:13px;color:var(--utm-maroon);font-weight:600;text-decoration:none;">View all →</a>
+                        </div>
+                        @if($latestFeedbacks->isEmpty())
+                            <div style="padding:40px;text-align:center;color:var(--slate-400);font-size:14px;">
+                                No customer feedbacks received yet.
+                            </div>
+                        @else
+                            <div>
+                                @foreach($latestFeedbacks as $fb)
+                                    <div style="padding:16px 24px;border-bottom:1px solid var(--slate-100);">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                            <div style="font-weight:600;font-size:13.5px;color:var(--slate-800);">{{ $fb->user->fullname }}</div>
+                                            <div style="display:flex;gap:2px;">
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ $i <= $fb->rating ? 'var(--utm-gold)' : 'var(--slate-200)' }}" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                                                    </svg>
+                                                @endfor
+                                            </div>
+                                        </div>
+                                        <div style="font-size:12px;color:var(--slate-400);margin-bottom:8px;">
+                                            Facility: <strong style="color:var(--slate-600);">{{ $fb->facility->name }}</strong> · {{ $fb->created_at ? $fb->created_at->diffForHumans() : 'Recently' }}
+                                        </div>
+                                        <div style="font-weight:650;font-size:13px;color:var(--slate-700);margin-bottom:4px;">"{{ $fb->title }}"</div>
+                                        <p style="font-size:12.5px;color:var(--slate-600);margin:0;line-height:1.5;">{{ $fb->message }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- 6. Student/Staff/Guest: Recent Feedbacks --}}
+                @if(!$user->isAdmin() && !$user->isRentalOfficer())
+                    @php
+                        $myRecentFeedbacks = \App\Models\Feedback::with('facility')
+                            ->where('user_id', $user->id)
+                            ->orderByDesc('created_at')
+                            ->limit(3)
+                            ->get();
+                    @endphp
+                    <div class="utm-card animate-in animate-in-delay-5">
+                        <div class="utm-card-header">
+                            <span class="utm-card-title">💬 My Recent Feedbacks</span>
+                            <a href="{{ route('feedback.my') }}" style="font-size:13px;color:var(--utm-maroon);font-weight:600;text-decoration:none;">View history →</a>
+                        </div>
+                        @if($myRecentFeedbacks->isEmpty())
+                            <div style="padding:32px;text-align:center;color:var(--slate-400);font-size:13.5px;">
+                                You have not submitted any feedbacks yet.
+                            </div>
+                        @else
+                            <div>
+                                @foreach($myRecentFeedbacks as $mf)
+                                    <div style="padding:16px 24px;border-bottom:1px solid var(--slate-100);">
+                                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                            <span style="font-weight:600;font-size:13.5px;color:var(--slate-800);">{{ $mf->facility->name }}</span>
+                                            <div style="display:flex;gap:2px;">
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ $i <= $mf->rating ? 'var(--utm-gold)' : 'var(--slate-200)' }}" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                                                    </svg>
+                                                @endfor
+                                            </div>
+                                        </div>
+                                        <div style="font-size:11.5px;color:var(--slate-400);margin-bottom:6px;">
+                                            Submitted {{ $mf->created_at ? $mf->created_at->format('d M Y, H:i') : 'Recently' }}
+                                        </div>
+                                        <div style="font-weight:650;font-size:13px;color:var(--slate-700);margin-bottom:4px;">"{{ $mf->title }}"</div>
+                                        <p style="font-size:12.5px;color:var(--slate-600);margin:0;line-height:1.5;">{{ $mf->message }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
                 @endif
             </div>
 

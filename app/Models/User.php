@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -28,6 +28,8 @@ class User extends Authenticatable
         'status',
         'matric_number',
         'staff_id',
+        'phone_number',
+        'profile_picture',
     ];
 
     /**
@@ -119,5 +121,16 @@ class User extends Authenticatable
             'guest'          => 'Guest',
             default          => ucfirst($this->role),
         };
+    }
+
+    /**
+     * Get the profile picture URL or fallback avatar initials url.
+     */
+    public function getProfilePictureUrlAttribute(): string
+    {
+        if ($this->profile_picture) {
+            return asset('storage/' . $this->profile_picture);
+        }
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->fullname) . '&color=8B0000&background=FDF2F2';
     }
 }

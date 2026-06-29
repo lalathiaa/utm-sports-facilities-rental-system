@@ -15,20 +15,40 @@
                 @csrf
             </form>
 
-            <form method="POST" action="{{ route('profile.update') }}">
+            <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
                 @csrf
                 @method('patch')
 
                 <div style="display:flex;flex-direction:column;gap:16px;">
 
+                    {{-- Profile Picture --}}
+                    <div class="utm-form-group" style="margin-bottom:0; display:flex; align-items:center; gap:20px; padding-bottom:16px; border-bottom:1px solid var(--slate-100);">
+                        <img src="{{ $user->profile_picture_url }}" alt="{{ $user->fullname }}"
+                             style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2.5px solid var(--utm-maroon);box-shadow:0 4px 10px rgba(0,0,0,0.06);flex-shrink:0;">
+                        <div>
+                            <label for="profile_picture" class="utm-label" style="margin-bottom:6px;">Profile Picture</label>
+                            <input id="profile_picture" type="file" name="profile_picture" accept="image/*"
+                                   class="utm-input" style="padding:6px 12px;font-size:13px;max-width:280px;">
+                            <div style="font-size:12px;color:var(--slate-400);margin-top:5px;">Allowed JPG, PNG. Max size of 2MB</div>
+                            @error('profile_picture')
+                                <div class="utm-error-msg" style="margin-top:4px;">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+                    </div>
+
                     {{-- Full Name --}}
                     <div class="utm-form-group" style="margin-bottom:0;">
                         <label for="fullname" class="utm-label">Full Name</label>
-                        <input id="fullname" type="text" name="name"
-                               value="{{ old('name', $user->fullname) }}"
+                        <input id="fullname" type="text" name="fullname"
+                               value="{{ old('fullname', $user->fullname) }}"
                                required autofocus autocomplete="name"
-                               class="utm-input {{ $errors->has('name') ? 'error' : '' }}">
-                        @error('name')
+                               class="utm-input {{ $errors->has('fullname') ? 'error' : '' }}">
+                        @error('fullname')
                             <div class="utm-error-msg">
                                 <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -38,12 +58,20 @@
                         @enderror
                     </div>
 
-                    {{-- Username (read-only) --}}
+                    {{-- Username --}}
                     <div class="utm-form-group" style="margin-bottom:0;">
-                        <label class="utm-label">Username</label>
-                        <input type="text" value="{{ $user->username }}" disabled
-                               class="utm-input" style="background:var(--slate-50);color:var(--slate-400);cursor:not-allowed;">
-                        <div class="utm-helper-text">Username cannot be changed.</div>
+                        <label for="username" class="utm-label">Username</label>
+                        <input id="username" type="text" name="username"
+                               value="{{ old('username', $user->username) }}"
+                               required class="utm-input {{ $errors->has('username') ? 'error' : '' }}">
+                        @error('username')
+                            <div class="utm-error-msg">
+                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
 
                     {{-- Email --}}
@@ -81,11 +109,37 @@
                         @endif
                     </div>
 
-                    {{-- IC Number (read-only) --}}
+                    {{-- IC Number --}}
                     <div class="utm-form-group" style="margin-bottom:0;">
-                        <label class="utm-label">IC Number</label>
-                        <input type="text" value="{{ $user->ic_number }}" disabled
-                               class="utm-input" style="background:var(--slate-50);color:var(--slate-400);cursor:not-allowed;">
+                        <label for="ic_number" class="utm-label">IC Number</label>
+                        <input id="ic_number" type="text" name="ic_number"
+                               value="{{ old('ic_number', $user->ic_number) }}"
+                               required class="utm-input {{ $errors->has('ic_number') ? 'error' : '' }}">
+                        @error('ic_number')
+                            <div class="utm-error-msg">
+                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ $message }}
+                            </div>
+                        @enderror
+                    </div>
+
+                    {{-- Phone Number --}}
+                    <div class="utm-form-group" style="margin-bottom:0;">
+                        <label for="phone_number" class="utm-label">Phone Number</label>
+                        <input id="phone_number" type="text" name="phone_number"
+                               value="{{ old('phone_number', $user->phone_number) }}"
+                               required placeholder="e.g. +60123456789"
+                               class="utm-input {{ $errors->has('phone_number') ? 'error' : '' }}">
+                        @error('phone_number')
+                            <div class="utm-error-msg">
+                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
 
                     {{-- Matric / Staff ID (read-only if present) --}}

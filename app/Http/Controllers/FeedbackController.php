@@ -115,7 +115,6 @@ class FeedbackController extends Controller
             'rating'        => ['required', 'integer', 'min:0', 'max:5'],
             'title'         => ['required', 'string', 'max:255'],
             'message'       => ['required', 'string', 'max:2000'],
-            'feedback_time' => ['required', 'date'],
         ]);
 
         Feedback::create([
@@ -125,7 +124,7 @@ class FeedbackController extends Controller
             'rating'           => $data['rating'],
             'title'            => $data['title'],
             'message'          => $data['message'],
-            'feedback_time'    => $data['feedback_time'],
+            'feedback_time'    => now(),
         ]);
 
         return redirect()->route('feedback.my')
@@ -147,7 +146,7 @@ class FeedbackController extends Controller
 
         $query = Feedback::with(['facility', 'booking'])
             ->where('user_id', $user->id)
-            ->orderByDesc('feedback_time');
+            ->orderByDesc('created_at');
 
         if ($search !== '') {
             $query->whereHas('facility', fn($q) => $q->where('name', 'like', "%{$search}%"));
@@ -171,7 +170,7 @@ class FeedbackController extends Controller
         $search     = trim($request->query('search', ''));
 
         $query = Feedback::with(['user', 'facility', 'booking'])
-            ->orderByDesc('feedback_time');
+            ->orderByDesc('created_at');
 
         if ($facilityId) {
             $query->where('facility_id', $facilityId);

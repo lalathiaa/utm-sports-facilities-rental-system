@@ -30,9 +30,11 @@
     @php
         $tabDefs = [
             'all'              => ['label' => 'All Bookings',           'cls' => 'active-slate'],
+            'pending_payment'  => ['label' => 'Pending Payment',       'cls' => 'active-blue'],
             'confirmed'        => ['label' => 'Confirmed',              'cls' => 'active-green'],
             'cancel_requested' => ['label' => 'Cancellation Requested', 'cls' => 'active-amber'],
             'cancelled'        => ['label' => 'Cancelled',              'cls' => 'active-red'],
+            'failed'           => ['label' => 'Failed',                 'cls' => 'active-red'],
         ];
     @endphp
     <div class="utm-status-tabs">
@@ -121,67 +123,71 @@
         </div>
     @else
         <div class="utm-card animate-in" style="overflow:hidden;">
-            <table class="utm-table">
-                <thead>
-                    <tr>
-                        <th>Ref #</th>
-                        <th>Renter</th>
-                        <th>Facility</th>
-                        <th>Date & Slot</th>
-                        <th>Participants</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($bookings as $booking)
-                        <tr style="{{ $booking->isCancelled() ? 'opacity:.55;' : '' }}">
-                            <td style="font-size:12.5px;color:var(--slate-400);font-family:monospace;font-weight:600;">
-                                #{{ str_pad($booking->id, 6, '0', STR_PAD_LEFT) }}
-                            </td>
-                            <td>
-                                <div style="font-weight:600;font-size:13.5px;color:var(--slate-800);">{{ $booking->user->fullname }}</div>
-                                <div style="font-size:12px;color:var(--slate-400);margin-top:2px;">{{ $booking->user->email }}</div>
-                            </td>
-                            <td style="font-size:13.5px;color:var(--slate-700);font-weight:500;">
-                                {{ $booking->facility->name }}
-                            </td>
-                            <td>
-                                <div style="font-size:13px;font-weight:600;color:var(--slate-700);">
-                                    {{ $booking->booking_date->format('d M Y') }}
-                                </div>
-                                <div style="font-size:12px;color:var(--slate-400);margin-top:2px;">
-                                    {{ $booking->slotLabel() }}
-                                </div>
-                            </td>
-                            <td>
-                                @if($booking->participants->isNotEmpty())
-                                    <div style="display:flex;flex-direction:column;gap:3px;">
-                                        @foreach($booking->participants as $p)
-                                            <div style="font-size:12.5px;color:{{ $p->is_primary ? 'var(--slate-700)' : 'var(--slate-400)' }};font-weight:{{ $p->is_primary ? '600' : '400' }};">
-                                                {{ $p->fullname }}
-                                                @if($p->is_primary)
-                                                    <span style="font-size:10px;color:var(--utm-maroon);font-weight:600;">(Renter)</span>
-                                                @endif
-                                            </div>
-                                        @endforeach
+            <div style="overflow-x: auto;">
+                <table class="utm-table">
+                    <thead>
+                        <tr>
+                            <th>Ref #</th>
+                            <th>Renter</th>
+                            <th>Facility</th>
+                            <th>Date & Slot</th>
+                            <th>Participants</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($bookings as $booking)
+                            <tr style="{{ $booking->isCancelled() || $booking->isFailed() ? 'opacity:.55;' : '' }}">
+                                <td style="font-size:12.5px;color:var(--slate-400);font-family:monospace;font-weight:600;">
+                                    #{{ str_pad($booking->id, 6, '0', STR_PAD_LEFT) }}
+                                </td>
+                                <td>
+                                    <div style="font-weight:600;font-size:13.5px;color:var(--slate-800);">{{ $booking->user->fullname }}</div>
+                                    <div style="font-size:12px;color:var(--slate-400);margin-top:2px;">{{ $booking->user->email }}</div>
+                                </td>
+                                <td style="font-size:13.5px;color:var(--slate-700);font-weight:500;">
+                                    {{ $booking->facility->name }}
+                                </td>
+                                <td>
+                                    <div style="font-size:13px;font-weight:600;color:var(--slate-700);">
+                                        {{ $booking->booking_date->format('d M Y') }}
                                     </div>
-                                @else
-                                    <span style="color:var(--slate-300);font-size:12px;">—</span>
-                                @endif
-                            </td>
-                            <td style="font-weight:700;font-size:13.5px;color:var(--slate-800);white-space:nowrap;">
-                                RM {{ number_format($booking->total_price, 2) }}
-                            </td>
-                            <td>
-                                <span class="badge {{ $booking->statusBadgeClass() }}">{{ $booking->statusLabel() }}</span>
-                                @if($booking->isCancelRequested() && $booking->cancellation_reason)
-                                    <div style="font-size:11.5px;color:var(--warning);margin-top:4px;max-width:160px;line-height:1.4;">
-                                        "{{ Str::limit($booking->cancellation_reason, 55) }}"
+                                    <div style="font-size:12px;color:var(--slate-400);margin-top:2px;">
+                                        {{ $booking->slotLabel() }}
                                     </div>
-                                @endif
-                            </td>
+                                </td>
+                                <td>
+                                    @if($booking->participants->isNotEmpty())
+                                        <div style="display:flex;flex-direction:column;gap:3px;">
+                                            @foreach($booking->participants as $p)
+                                                <div style="font-size:12.5px;color:{{ $p->is_primary ? 'var(--slate-700)' : 'var(--slate-400)' }};font-weight:{{ $p->is_primary ? '600' : '400' }};">
+                                                    {{ $p->fullname }}
+                                                    @if($p->is_primary)
+                                                        <span style="font-size:10px;color:var(--utm-maroon);font-weight:600;">(Renter)</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span style="color:var(--slate-300);font-size:12px;">—</span>
+                                    @endif
+                                </td>
+                                <td style="font-weight:700;font-size:13.5px;color:var(--slate-800);white-space:nowrap;">
+                                    RM {{ number_format($booking->total_price, 2) }}
+                                </td>
+                                <td>
+                                    <span class="badge {{ $booking->statusBadgeClass() }}">{{ $booking->statusLabel() }}</span>
+                                    @if($booking->isPendingPayment() && $booking->payment_expires_at)
+                                        <div style="font-size:10.5px;color:#92400e;margin-top:3px;">Expires {{ $booking->payment_expires_at->diffForHumans() }}</div>
+                                    @endif
+                                    @if($booking->isCancelRequested() && $booking->cancellation_reason)
+                                        <div style="font-size:11.5px;color:var(--warning);margin-top:4px;max-width:160px;line-height:1.4;">
+                                            "{{ Str::limit($booking->cancellation_reason, 55) }}"
+                                        </div>
+                                    @endif
+                                </td>
                             <td>
                                 <div style="display:flex;flex-direction:column;gap:5px;">
                                     {{-- View Slip --}}
@@ -237,6 +243,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
 
             @if($bookings->hasPages())
                 <div style="padding:16px 24px;border-top:1px solid var(--slate-100);">

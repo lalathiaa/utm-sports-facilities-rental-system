@@ -16,6 +16,7 @@ class BookingParticipant extends Model
         'fullname',
         'ic_number',
         'matric_number',
+        'phone_number',
     ];
 
     protected $casts = [

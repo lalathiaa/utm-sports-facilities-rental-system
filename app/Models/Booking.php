@@ -87,6 +87,30 @@ class Booking extends Model
         return $this->participants()->where('is_primary', true)->first();
     }
 
+    public static function expireStaleBookings(): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $expiredGroups = self::select('booking_group_id')
+                ->where('status', 'pending_payment')
+                ->where('payment_expires_at', '<', now())
+                ->whereNotNull('booking_group_id')
+                ->distinct()
+                ->pluck('booking_group_id');
+
+            // 1. Update all expired pending bookings to failed (even if booking_group_id is null)
+            self::where('status', 'pending_payment')
+                ->where('payment_expires_at', '<', now())
+                ->update(['status' => 'failed']);
+
+            // 2. Update matching payments to failed
+            if ($expiredGroups->isNotEmpty()) {
+                Payment::whereIn('booking_group_id', $expiredGroups)
+                    ->where('payment_status', 'pending')
+                    ->update(['payment_status' => 'failed']);
+            }
+        });
+    }
+
     // ─── Helpers ────────────────────────────────────────────────────────────
 
     public function slotLabel(): string

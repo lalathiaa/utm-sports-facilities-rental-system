@@ -64,7 +64,7 @@
             ];
         @endphp
         @foreach($tabs as $key => $tab)
-            <a href="{{ route('admin.users.index', ['filter' => $key]) }}"
+            <a href="{{ route('admin.users.index', array_merge(request()->query(), ['filter' => $key])) }}"
                style="padding:7px 14px;border-radius:100px;font-size:13px;font-weight:600;text-decoration:none;transition:all .15s;display:flex;align-items:center;gap:6px;
                       {{ $filter === $key ? $tab['active'] : 'background:white;color:var(--slate-500);border:1.5px solid var(--slate-200);' }}">
                 {{ $tab['label'] }}
@@ -75,6 +75,42 @@
             </a>
         @endforeach
     </div>
+
+    {{-- Filter Bar --}}
+    <form method="GET" action="{{ route('admin.users.index') }}" class="utm-filter-bar" style="margin-bottom:20px;">
+        <input type="hidden" name="filter" value="{{ $filter }}">
+
+        {{-- Search --}}
+        <div class="utm-filter-group" style="flex:1;">
+            <span class="utm-filter-label">Search Users</span>
+            <div class="utm-search-wrap">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/>
+                </svg>
+                <input type="text" name="search" value="{{ $search ?? '' }}"
+                       placeholder="Search by name, username, email, IC, matric or staff ID…"
+                       class="utm-input" autocomplete="off" style="width:100%;">
+            </div>
+        </div>
+
+        {{-- Actions --}}
+        <div class="utm-filter-actions">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/>
+                </svg>
+                Search
+            </button>
+            @if(($search ?? '') !== '' || $filter !== 'all')
+                <a href="{{ route('admin.users.index') }}" class="btn btn-outline btn-sm">
+                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Clear all
+                </a>
+            @endif
+        </div>
+    </form>
 
     @if($users->isEmpty())
         <div class="utm-card" style="text-align:center;padding:64px 32px;">
@@ -88,19 +124,20 @@
         </div>
     @else
         <div class="utm-card animate-in" style="overflow:hidden;">
-            <table class="utm-table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>ID / Matric</th>
-                        <th>Role</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($users as $user)
+            <div style="overflow-x: auto;">
+                <table class="utm-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>ID / Matric</th>
+                            <th>Role</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($users as $user)
                         <tr>
                             <td>
                                 <div style="display:flex;align-items:center;gap:12px;">
@@ -184,8 +221,9 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
 
-            @if($users->hasPages())
+        @if($users->hasPages())
                 <div style="padding:16px 24px;border-top:1px solid var(--slate-100);">
                     {{ $users->links() }}
                 </div>

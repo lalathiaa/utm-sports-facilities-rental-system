@@ -100,17 +100,27 @@
                                     @php
                                         $end = date('H:i', strtotime($slot) + 3600);
                                         $isBooked = in_array($slot, $bookedSlots);
+                                        
+                                        // Block slots whose ending time has passed (if booking date is today)
+                                        $isPassed = false;
+                                        if (date('Y-m-d', strtotime($date)) === date('Y-m-d')) {
+                                            $isPassed = (date('H:i') >= $end);
+                                        }
+                                        
+                                        $isBookedOrPassed = $isBooked || $isPassed;
                                         $isOld = in_array($slot, $oldSlots);
                                     @endphp
-                                    <label class="slot-label" style="{{ $isBooked ? 'cursor:not-allowed;' : 'cursor:pointer;' }}">
+                                    <label class="slot-label" style="{{ $isBookedOrPassed ? 'cursor:not-allowed;' : 'cursor:pointer;' }}">
                                         <input type="checkbox" name="slots[]" value="{{ $slot }}"
                                                class="slot-checkbox" style="display:none;"
-                                               {{ $isBooked ? 'disabled' : '' }} {{ $isOld ? 'checked' : '' }}>
-                                        <div class="slot-card {{ $isBooked ? 'booked' : ($isOld ? 'selected' : 'available') }}">
+                                               {{ $isBookedOrPassed ? 'disabled' : '' }} {{ $isOld ? 'checked' : '' }}>
+                                        <div class="slot-card {{ $isBookedOrPassed ? 'booked' : ($isOld ? 'selected' : 'available') }}">
                                             <div style="font-weight:600;font-size:13px;">{{ $slot }}</div>
                                             <div style="font-size:11px;opacity:.7;margin-top:2px;">– {{ $end }}</div>
                                             @if($isBooked)
                                                 <div style="font-size:10px;color:var(--slate-400);margin-top:3px;">Booked</div>
+                                            @elseif($isPassed)
+                                                <div style="font-size:10px;color:var(--slate-400);margin-top:3px;">Passed</div>
                                             @endif
                                         </div>
                                     </label>
@@ -223,26 +233,49 @@
                             <div style="font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--utm-maroon);margin-bottom:16px;">
                                 Your Details — Participant 1 (Renter)
                             </div>
+                            
+                            @if(empty($user->phone_number))
+                                <div class="utm-alert utm-alert-warning" style="margin-bottom:16px; display:flex; gap:10px;">
+                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span style="font-size:13.5px;line-height:1.5;">
+                                        Please set your <strong>phone number</strong> in your <a href="{{ route('profile.edit') }}" style="font-weight:700;text-decoration:underline;color:inherit;">Profile Settings</a> before making a booking.
+                                    </span>
+                                </div>
+                            @endif
+
                             <div class="participant-grid">
                                 <div>
                                     <label for="primary_fullname" class="utm-label">Full Name <span style="color:var(--danger);">*</span></label>
                                     <input id="primary_fullname" type="text" name="primary_fullname"
-                                           value="{{ old('primary_fullname', $user->fullname) }}" required
+                                           value="{{ old('primary_fullname', $user->fullname) }}" required readonly
+                                           style="background:var(--slate-50);color:var(--slate-500);cursor:not-allowed;"
                                            placeholder="As per IC" class="utm-input {{ $errors->has('primary_fullname') ? 'error' : '' }}">
                                     @error('primary_fullname') <div class="utm-error-msg">{{ $message }}</div> @enderror
                                 </div>
                                 <div>
                                     <label for="primary_ic_number" class="utm-label">IC Number <span style="color:var(--danger);">*</span></label>
                                     <input id="primary_ic_number" type="text" name="primary_ic_number"
-                                           value="{{ old('primary_ic_number', $user->ic_number) }}" required
+                                           value="{{ old('primary_ic_number', $user->ic_number) }}" required readonly
+                                           style="background:var(--slate-50);color:var(--slate-500);cursor:not-allowed;"
                                            placeholder="e.g. 990101011234" class="utm-input {{ $errors->has('primary_ic_number') ? 'error' : '' }}">
                                     @error('primary_ic_number') <div class="utm-error-msg">{{ $message }}</div> @enderror
                                 </div>
                                 <div>
                                     <label for="primary_matric_number" class="utm-label">Matric / Staff ID</label>
                                     <input id="primary_matric_number" type="text" name="primary_matric_number"
-                                           value="{{ old('primary_matric_number', $user->matric_number ?? $user->staff_id) }}"
+                                           value="{{ old('primary_matric_number', $user->matric_number ?? $user->staff_id) }}" readonly
+                                           style="background:var(--slate-50);color:var(--slate-500);cursor:not-allowed;"
                                            placeholder="If applicable" class="utm-input">
+                                </div>
+                                <div>
+                                    <label for="primary_phone_number" class="utm-label">Phone Number <span style="color:var(--danger);">*</span></label>
+                                    <input id="primary_phone_number" type="text" name="primary_phone_number"
+                                           value="{{ old('primary_phone_number', $user->phone_number) }}" required readonly
+                                           style="background:var(--slate-50);color:var(--slate-500);cursor:not-allowed;"
+                                           placeholder="e.g. +60123456789" class="utm-input {{ $errors->has('primary_phone_number') ? 'error' : '' }}">
+                                    @error('primary_phone_number') <div class="utm-error-msg">{{ $message }}</div> @enderror
                                 </div>
                             </div>
                         </div>
@@ -433,7 +466,8 @@
             eqRow.style.display = 'none';
         }
 
-        document.getElementById('submit-btn').disabled = slots === 0;
+        const phoneMissing = {{ empty($user->phone_number) ? 'true' : 'false' }};
+        document.getElementById('submit-btn').disabled = slots === 0 || phoneMissing;
     }
 
     document.getElementById('booking-date').addEventListener('change', function () {

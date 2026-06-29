@@ -16,20 +16,9 @@
 <aside class="utm-sidebar" id="sidebar">
 
     {{-- Brand --}}
-    <div class="utm-sidebar-brand">
-        <a href="{{ route('dashboard') }}" class="utm-sidebar-logo">
-            <div class="utm-sidebar-logo-mark">
-                {{-- UTM Logo SVG --}}
-                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
-                    <rect width="40" height="40" rx="8" fill="#8B0000"/>
-                    <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle"
-                          font-family="Georgia,serif" font-weight="700" font-size="13" fill="white">UTM</text>
-                </svg>
-            </div>
-            <div class="utm-sidebar-logo-text">
-                <span class="system-name">Sports Facilities</span>
-                <span class="university-name">Universiti Teknologi Malaysia</span>
-            </div>
+    <div class="utm-sidebar-brand" style="padding: 24px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: center;">
+        <a href="{{ route('dashboard') }}" style="display: flex; justify-content: center; align-items: center; width: 100%; transition: all 0.25s ease;" onmouseover="this.style.transform='scale(1.02)';" onmouseout="this.style.transform='scale(1)';">
+            <img src="{{ asset('images/logo.png?v=4') }}" alt="UTM Sports Logo" style="width: 100%; max-width: 170px; height: auto; display: block; filter: drop-shadow(0px 0px 2px #fff) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.6));">
         </a>
     </div>
 

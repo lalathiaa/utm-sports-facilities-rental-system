@@ -27,19 +27,23 @@ class ExpirePayments extends Command
             return self::SUCCESS;
         }
 
-        DB::transaction(function () use ($expiredGroups) {
-            // Expire every slot in each expired group
-            Booking::whereIn('booking_group_id', $expiredGroups)
-                ->where('status', 'pending_payment')
+        $totalSlotsReleased = 0;
+
+        DB::transaction(function () use ($expiredGroups, &$totalSlotsReleased) {
+            // 1. Expire all bookings that are expired (including null booking_group_id)
+            $totalSlotsReleased = Booking::where('status', 'pending_payment')
+                ->where('payment_expires_at', '<', now())
                 ->update(['status' => 'failed']);
 
-            // Expire the corresponding payment records
-            Payment::whereIn('booking_group_id', $expiredGroups)
-                ->where('payment_status', 'pending')
-                ->update(['payment_status' => 'failed']);
+            // 2. Expire the corresponding payment records
+            if ($expiredGroups->isNotEmpty()) {
+                Payment::whereIn('booking_group_id', $expiredGroups)
+                    ->where('payment_status', 'pending')
+                    ->update(['payment_status' => 'failed']);
+            }
         });
 
-        $this->info("Expired {$expiredGroups->count()} booking group(s).");
+        $this->info("Expired {$expiredGroups->count()} booking group(s), releasing {$totalSlotsReleased} slot(s) back to available.");
 
         return self::SUCCESS;
     }

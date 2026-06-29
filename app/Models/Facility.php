@@ -50,12 +50,24 @@ class Facility extends Model
     /**
      * Get booked slot_start times for a given date (bookings only).
      * Treats confirmed + cancel_requested as occupied.
+     * Pending-payment slots are only treated as occupied while their payment
+     * window is still open — expired reservations are transparent to other users.
      */
     public function bookedSlotsOn(string $date): array
     {
         return $this->bookings()
             ->where('booking_date', $date)
-            ->whereIn('status', ['confirmed', 'cancel_requested', 'pending_payment'])
+            ->where(function ($query) {
+                $query->whereIn('status', ['confirmed', 'cancel_requested'])
+                      ->orWhere(function ($q) {
+                          // Include pending_payment ONLY if its timer has not expired yet
+                          $q->where('status', 'pending_payment')
+                            ->where(function ($inner) {
+                                $inner->whereNull('payment_expires_at')
+                                      ->orWhere('payment_expires_at', '>', now());
+                            });
+                      });
+            })
             ->pluck('slot_start')
             ->map(fn($t) => substr($t, 0, 5))
             ->toArray();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\FacilityClosure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ class AnnouncementController extends Controller
         $search = trim($request->query('search', ''));
 
         $query = Announcement::with('user')
-            ->orderByDesc('announcement_time');
+            ->orderByDesc('created_at');
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -41,7 +42,7 @@ class AnnouncementController extends Controller
 
         $query = Announcement::with('user')
             ->where('user_id', Auth::id())
-            ->orderByDesc('announcement_time');
+            ->orderByDesc('created_at');
 
         if ($search !== '') {
             $query->where('title', 'like', "%{$search}%");
@@ -54,7 +55,14 @@ class AnnouncementController extends Controller
 
     public function create(): View
     {
-        return view('announcements.officer.create');
+        $upcomingClosures = FacilityClosure::with('facility')
+            ->where('closure_date', '>=', now()->toDateString())
+            ->orderBy('facility_id')
+            ->orderBy('closure_date')
+            ->get()
+            ->groupBy('facility.name');
+
+        return view('announcements.officer.create', compact('upcomingClosures'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -62,14 +70,13 @@ class AnnouncementController extends Controller
         $data = $request->validate([
             'title'             => ['required', 'string', 'max:255'],
             'message'           => ['required', 'string', 'max:5000'],
-            'announcement_time' => ['required', 'date'],
         ]);
 
         Announcement::create([
             'user_id'           => Auth::id(),
             'title'             => $data['title'],
             'message'           => $data['message'],
-            'announcement_time' => $data['announcement_time'],
+            'announcement_time' => now(),
         ]);
 
         return redirect()->route('officer.announcements.index')
@@ -91,13 +98,11 @@ class AnnouncementController extends Controller
         $data = $request->validate([
             'title'             => ['required', 'string', 'max:255'],
             'message'           => ['required', 'string', 'max:5000'],
-            'announcement_time' => ['required', 'date'],
         ]);
 
         $announcement->update([
             'title'             => $data['title'],
             'message'           => $data['message'],
-            'announcement_time' => $data['announcement_time'],
         ]);
 
         return redirect()->route('officer.announcements.index')

@@ -862,7 +862,10 @@ h3 {
 }
 
 .utm-auth-panel {
-    background: linear-gradient(160deg, var(--utm-maroon-dark) 0%, var(--utm-maroon) 50%, #A50000 100%);
+    background-image: linear-gradient(135deg, rgba(107, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.88) 100%), url('/images/utm-scenery.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
     flex-direction: column;
     justify-content: space-between;

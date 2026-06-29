@@ -21,6 +21,9 @@ class PaymentController extends Controller
 
     public function prepare(Booking $booking): View|RedirectResponse
     {
+        Booking::expireStaleBookings();
+        $booking->refresh();
+
         abort_if($booking->user_id !== Auth::id(), 403);
 
         if ($booking->isPaymentExpired()) {
@@ -47,6 +50,9 @@ class PaymentController extends Controller
 
     public function checkout(Booking $booking): RedirectResponse
     {
+        Booking::expireStaleBookings();
+        $booking->refresh();
+
         abort_if($booking->user_id !== Auth::id(), 403);
 
         if (! $booking->isPendingPayment()) {

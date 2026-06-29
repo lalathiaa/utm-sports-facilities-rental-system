@@ -17,6 +17,7 @@ class UserManagementController extends Controller
     public function index(Request $request): View
     {
         $filter = $request->query('filter', 'all');
+        $search = trim($request->query('search', ''));
 
         $query = User::whereIn('role', ['staff', 'student', 'guest', 'rental_officer'])
             ->orderBy('role')
@@ -33,9 +34,20 @@ class UserManagementController extends Controller
         }
         // 'all' applies no additional filter
 
-        $users = $query->paginate(20);
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('fullname', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('matric_number', 'like', "%{$search}%")
+                  ->orWhere('staff_id', 'like', "%{$search}%")
+                  ->orWhere('ic_number', 'like', "%{$search}%");
+            });
+        }
 
-        return view('admin.users.index', compact('users', 'filter'));
+        $users = $query->paginate(20)->appends($request->query());
+
+        return view('admin.users.index', compact('users', 'filter', 'search'));
     }
 
     /**

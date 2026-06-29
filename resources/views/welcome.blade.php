@@ -203,43 +203,18 @@
 </head>
 <body>
 
-    {{-- Header --}}
-    <header class="landing-header">
-        <a href="/" class="logo-area">
-            <div class="logo-mark">UTM</div>
-            <div class="logo-text">
-                <span class="app-title">Sports Facilities</span>
-                <span class="univ-title">Universiti Teknologi Malaysia</span>
-            </div>
-        </a>
-        <nav class="nav-links">
-            @if (Route::has('login'))
-                @auth
-                    <a href="{{ url('/dashboard') }}" class="btn btn-primary btn-sm">Dashboard</a>
-                @else
-                    <a href="{{ route('login') }}" class="btn btn-outline btn-sm">Sign In</a>
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="btn btn-primary btn-sm">Register</a>
-                    @endif
-                @endauth
-            @endif
-        </nav>
-    </header>
-
     {{-- Hero --}}
     <section class="hero-section">
+        <div style="margin-bottom: 32px;">
+            <img src="{{ asset('images/logo.png?v=4') }}" alt="UTM Sports Logo" style="max-width: 260px; height: auto; margin: 0 auto; display: block; filter: drop-shadow(0px 0px 2px #fff) drop-shadow(0px 0px 4px rgba(255, 255, 255, 0.6));">
+        </div>
         <h1 class="hero-title">Book Sports Facilities with Ease</h1>
         <p class="hero-subtitle">Access world-class sports facilities at UTM. Reserve courts, fields, and equipment in minutes — anytime, anywhere.</p>
-        <div>
+        <div style="display: flex; justify-content: center; align-items: center;">
             @auth
                 <a href="{{ url('/dashboard') }}" class="btn btn-gold btn-lg">Go to Dashboard</a>
             @else
                 <a href="{{ route('register') }}" class="btn btn-gold btn-lg">Get Started Now</a>
-            @auth
-                <a href="{{ route('facilities.index') }}" class="btn btn-outline btn-lg" style="color: white; border-color: rgba(255,255,255,.30);">Browse Facilities</a>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-outline btn-lg" style="color: white; border-color: rgba(255,255,255,.30);">Browse Facilities</a>
-            @endauth
             @endauth
         </div>
     </section>
