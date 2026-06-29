@@ -41,6 +41,7 @@ class RegisteredUserController extends Controller
         // Base validation rules
         $rules = [
             'fullname'  => ['required', 'string', 'max:255'],
+            'username'  => ['required', 'string', 'alpha_dash', 'max:50', 'unique:' . User::class],
             'ic_number' => ['required', 'string', 'max:20'],
             'email'     => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password'  => ['required', 'confirmed', Rules\Password::defaults()],
@@ -56,19 +57,9 @@ class RegisteredUserController extends Controller
 
         $request->validate($rules);
 
-        // Auto-derive username from email prefix
-        $username = explode('@', $request->email)[0];
-
-        // If username already exists, append a random number
-        $baseUsername = $username;
-        $counter = 1;
-        while (User::where('username', $username)->exists()) {
-            $username = $baseUsername . $counter++;
-        }
-
         $user = User::create([
             'fullname'      => $request->fullname,
-            'username'      => $username,
+            'username'      => $request->username,
             'ic_number'     => $request->ic_number,
             'email'         => $request->email,
             'password'      => Hash::make($request->password),

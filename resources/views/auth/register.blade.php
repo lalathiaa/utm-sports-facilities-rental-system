@@ -24,6 +24,17 @@
                 @enderror
             </div>
 
+            {{-- Username --}}
+            <div class="utm-form-group animate-in animate-in-delay-1">
+                <label for="username" class="utm-label">Username</label>
+                <input id="username" type="text" name="username" value="{{ old('username') }}" required
+                       placeholder="Choose a unique username"
+                       class="utm-input {{ $errors->has('username') ? 'error' : '' }}">
+                @error('username')
+                    <div class="utm-error-msg">{{ $message }}</div>
+                @enderror
+            </div>
+
             {{-- IC Number --}}
             <div class="utm-form-group animate-in animate-in-delay-1">
                 <label for="ic_number" class="utm-label">IC Number</label>
